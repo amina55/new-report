@@ -1,5 +1,4 @@
 <?php
-session_start();
 include  "master.php";
 $currentYear = date('Y');
 
@@ -113,14 +112,7 @@ $civilCases = $statement->fetchAll();
 
 
                 <div id="detailed_search">
-                    <div class="mt20 col-sm-12">
-                        <label class="col-sm-2 mt10"> Specific Case </label>
 
-                        <div class="col-sm-4">
-                            <input placeholder="Case No." class="form-control" type="number" name="order_id" min="0">
-                        </div>
-                    </div>
-                    <br>
                     <div class="mt20 col-sm-12">
                         <label class="col-sm-2 mt10"> Search By </label>
 
@@ -132,21 +124,27 @@ $civilCases = $statement->fetchAll();
                         </div>
                     </div>
                     <br>
-                    <div class="mt20 col-sm-12">
 
-                        <!--<label class="col-sm-2" for="purpose_selector"> Choose a Purpose</label>
+                    <div class="mt20 col-sm-12">
+                        <label class="col-sm-2 mt10"> Specific Case </label>
+
                         <div class="col-sm-4">
+                            <input placeholder="Case No." class="form-control" type="number" name="order_id" min="0">
+                        </div>
+
+                        <!--<div class="col-sm-4">
                             <select id="purpose_selector" name="purpose_selector" class="form-control">
                                 <option value="all">All</option>
                                 <option value="admission">Admission</option>
                                 <option value="order">Order</option>
                                 <option value="hearing">hearing</option>
-                            </select>
-                        </div>-->
+                            </select>-->
+
                         <div class="col-sm-2">
-                            <input class="btn btn-green" type="submit" value="Go">
+                            <input class="btn btn-green btn-global btn-global-thick" type="submit" value="Search">
                         </div>
                     </div>
+                    <br><br>
                 </div>
             </div>
         </form>

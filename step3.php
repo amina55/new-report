@@ -7,7 +7,7 @@ if (!$connection) {
     if(!empty($_SESSION['step3_query'])) {
         $queryCondition = $_SESSION['step3_query'];
     } else {
-        $caseId = $_GET['case_id'];
+        $caseId = !empty($_GET['case_id']) ? $_GET['case_id'] : 0;
         $purposeType = !empty($_GET['purpose']) ? $_GET['purpose'] : '';
         switch ($purposeType) {
             case 'admission' :
@@ -22,11 +22,17 @@ if (!$connection) {
             default :
                 $purposeId = 0;
         }
-        $queryCondition = $_SESSION['step1']. " and filcase_type = $caseId ";
+        $queryCondition = $_SESSION['step1'];
+        ;
+        $queryCondition .= ($caseId) ? " and filcase_type = $caseId " : '';
         $queryCondition .= ($purposeType) ? " and purpose_today = $purposeId " : '';
     }
+    $selectColumns = '';
+    if(!empty($_SESSION['extra_params']) && $_SESSION['extra_params'] == 'advocate') {
+        $selectColumns = ',pet_adv, res_adv';
 
-    $query = "select case_no, cino, fil_no, fil_year  from civil_t where $queryCondition";
+    }
+    $query = "select case_no, cino, fil_no, fil_year $selectColumns  from civil_t where $queryCondition";
     $statement = $connection->prepare($query);
     $statement->execute();
     $caseReports = $statement->fetchAll();

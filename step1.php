@@ -1,6 +1,6 @@
 <?php
-session_start();
-$message = $query = '';
+session_start()       ;
+$message = $query = $purpose = '';
 include "database_access.php";
 if (!$connection) {
     $message = "Connection Failed.";
@@ -8,14 +8,15 @@ if (!$connection) {
     if ($_SERVER['REQUEST_METHOD'] == 'POST') {
         $_SESSION['step3_query'] = '';
         $_SESSION['step2_query'] = '';
+        $_SESSION['extra_params'] = '';
 
         $startYear = trim($_POST['start_year']);
         $endYear = trim($_POST['end_year']);
         $selector = trim($_POST['case_type_selector']);
         $caseType = trim($_POST[$selector.'_case_types']);
         $orderId = trim($_POST['order_id']);
-        $advocateName = trim($_POST['advocate_name']);
-        $judgeName = trim($_POST['judge_name']);
+        $advocateName = strtoupper(trim($_POST['advocate_name']));
+        $judgeName = strtoupper(trim($_POST['judge_name']));
         $purpose = ''; /*trim($_POST['purpose_selector']);*/
         $step = 'step1';
 
@@ -58,12 +59,21 @@ if (!$connection) {
         }
 
         if($advocateName) {
-            $step = 'step3';
+            $step = 'step2';
+            $_SESSION['extra_params'] = 'advocate';
             $whereQuery .= " ( res_adv like '%$advocateName%' or pet_adv like '%$advocateName%' ) and";
         }
         if($judgeName) {
-            $step = 'step3';
-           // $whereQuery .= " judge_name like '%$judgeName%' and";
+            $step = 'step2';
+            $judgeStr = '';
+            $_SESSION['extra_params'] = 'judge';
+            $judgeQuery = "select judge_code from judge_name_t where judge_name like '%$judgeName%'";
+            $judgeCodes = $judgeQuery->query();
+            foreach ($judgeCodes as $judgeCode) {
+                $judgeStr .="'$judgeCode',";
+            }
+            $judgeStr = ($judgeStr) ? rtrim($judgeStr) : '';
+            $whereQuery .= ($judgeStr) ? " judge_code like '%$judgeStr%' and" : '';
         }
         if($orderId) {
             $step = 'step3';
@@ -71,80 +81,79 @@ if (!$connection) {
         }
         $whereQuery = rtrim($whereQuery, 'and');
 
-        if($step == 'step3') {
-         $_SESSION['step3_query'] = $whereQuery;
-         header('Location: step3.php'); exit();
-        } else if ($step == 'step2') {
+        if ($step == 'step2') {
             $_SESSION['step2_query'] = $whereQuery;
             header('Location: step2.php'); exit();
         }
+        $query = ($whereQuery) ? $whereQuery : 'true';
 
-        $query = $whereQuery;
-        if ($query) {
-            $_SESSION['step1'] = $query;
-            $query = "select count(cino) as total_count from civil_t where " . $query;
+    } else {
+        $query = "true";
+    }
+    if ($query) {
+        $_SESSION['step1'] = $query;
+        $query = "select count(cino) as total_count from civil_t where " . $query;
+        $statement = $connection->prepare($query);
+        $statement->execute();
+        $reports = $statement->fetch();
+
+        if($reports['total_count'] > 0 ) {
+            $criminalCaseIdsStr = !empty($_SESSION['criminal_case_ids']) ? $_SESSION['criminal_case_ids'] : '';
+            if (empty($criminalCaseIdsStr)) {
+                $criminalCaseIdsQuery = "select DISTINCT filcase_type from civil_t where branch_id = 2";
+                $criminalCaseIds = $connection->query($criminalCaseIdsQuery);
+                foreach ($criminalCaseIds as $criminalCaseId) {
+                    $criminalCaseIdsStr .= $criminalCaseId['filcase_type'].",";
+                }
+                $criminalCaseIdsStr = rtrim($criminalCaseIdsStr, ',');
+                $_SESSION['criminal_case_ids'] = $criminalCaseIdsStr;
+            }
+
+            $civilCaseIdStr = !empty($_SESSION['civil_case_ids']) ? $_SESSION['civil_case_ids'] : '';
+            if (empty($civilCaseIdStr)) {
+                $civilCaseIdsQuery = "select DISTINCT filcase_type from civil_t where branch_id = 1";
+                $civilCaseIds = $connection->query($civilCaseIdsQuery);
+                foreach ($civilCaseIds as $civilCaseId) {
+                    $civilCaseIdStr .= $civilCaseId['filcase_type'].",";
+                }
+                $civilCaseIdStr = rtrim($civilCaseIdStr, ',');
+                $_SESSION['civil_case_ids'] = $civilCaseIdStr;
+            }
+
+            switch ($purpose) {
+                case 'all' :
+                    $countQuery = ', sum(case when purpose_today = 2 then 1 else 0 end) admission, sum(case when purpose_today = 4 then 1 else 0 end) orders, sum(case when purpose_today = 8 then 1 else 0 end) hearing';
+                    break;
+                case 'admission' :
+                    $countQuery = ', sum(case when purpose_today = 2 then 1 else 0 end) admission ';
+                    break;
+                case 'order' :
+                    $countQuery = ', sum(case when purpose_today = 4 then 1 else 0 end) orders ';
+                    break;
+                case 'hearing' :
+                    $countQuery = ', sum(case when purpose_today = 8 then 1 else 0 end) hearing ';
+                    break;
+                default :
+                    $countQuery = ', sum(case when purpose_today = 2 then 1 else 0 end) admission, sum(case when purpose_today = 4 then 1 else 0 end) orders, sum(case when purpose_today = 8 then 1 else 0 end) hearing';
+            }
+
+            $query = $_SESSION['step1'] . " and filcase_type in ($criminalCaseIdsStr) ";
+            $query = "select count(cino) as count $countQuery from civil_t where " . $query;
+            $statement = $connection->prepare($query);
+            $statement->execute();
+            $criminalReport = $statement->fetch();
+
+            $query = $_SESSION['step1'] . " and filcase_type in ($civilCaseIdStr) ";
+            $query = "select count(cino) as count $countQuery from civil_t where " . $query;
+            $statement = $connection->prepare($query);
+            $statement->execute();
+            $civilReport = $statement->fetch();
+
+            $query = "select count(cino) as count $countQuery from civil_t where " . $_SESSION['step1'];
             $statement = $connection->prepare($query);
             $statement->execute();
             $reports = $statement->fetch();
 
-            if($reports['total_count'] > 0 ) {
-                $criminalCaseIdsStr = !empty($_SESSION['criminal_case_ids']) ? $_SESSION['criminal_case_ids'] : '';
-                if (empty($criminalCaseIdsStr)) {
-                    $criminalCaseIdsQuery = "select DISTINCT filcase_type from civil_t where branch_id = 2";
-                    $criminalCaseIds = $connection->query($criminalCaseIdsQuery);
-                    foreach ($criminalCaseIds as $criminalCaseId) {
-                        $criminalCaseIdsStr .= $criminalCaseId['filcase_type'].",";
-                    }
-                    $criminalCaseIdsStr = rtrim($criminalCaseIdsStr, ',');
-                    $_SESSION['criminal_case_ids'] = $criminalCaseIdsStr;
-                }
-
-                $civilCaseIdStr = !empty($_SESSION['civil_case_ids']) ? $_SESSION['civil_case_ids'] : '';
-                if (empty($civilCaseIdStr)) {
-                    $civilCaseIdsQuery = "select DISTINCT filcase_type from civil_t where branch_id = 1";
-                    $civilCaseIds = $connection->query($civilCaseIdsQuery);
-                    foreach ($civilCaseIds as $civilCaseId) {
-                        $civilCaseIdStr .= $civilCaseId['filcase_type'].",";
-                    }
-                    $civilCaseIdStr = rtrim($civilCaseIdStr, ',');
-                    $_SESSION['civil_case_ids'] = $civilCaseIdStr;
-                }
-
-                switch ($purpose) {
-                    case 'all' :
-                        $countQuery = ', sum(case when purpose_today = 2 then 1 else 0 end) admission, sum(case when purpose_today = 4 then 1 else 0 end) orders, sum(case when purpose_today = 8 then 1 else 0 end) hearing';
-                        break;
-                    case 'admission' :
-                        $countQuery = ', sum(case when purpose_today = 2 then 1 else 0 end) admission ';
-                        break;
-                    case 'order' :
-                        $countQuery = ', sum(case when purpose_today = 4 then 1 else 0 end) orders ';
-                        break;
-                    case 'hearing' :
-                        $countQuery = ', sum(case when purpose_today = 8 then 1 else 0 end) hearing ';
-                        break;
-                    default :
-                        $countQuery = ', sum(case when purpose_today = 2 then 1 else 0 end) admission, sum(case when purpose_today = 4 then 1 else 0 end) orders, sum(case when purpose_today = 8 then 1 else 0 end) hearing';
-                }
-
-                $query = $_SESSION['step1'] . " and filcase_type in ($criminalCaseIdsStr) ";
-                $query = "select count(cino) as count $countQuery from civil_t where " . $query;
-                $statement = $connection->prepare($query);
-                $statement->execute();
-                $criminalReport = $statement->fetch();
-
-                $query = $_SESSION['step1'] . " and filcase_type in ($civilCaseIdStr) ";
-                $query = "select count(cino) as count $countQuery from civil_t where " . $query;
-                $statement = $connection->prepare($query);
-                $statement->execute();
-                $civilReport = $statement->fetch();
-
-                $query = "select count(cino) as count $countQuery from civil_t where " . $_SESSION['step1'];
-                $statement = $connection->prepare($query);
-                $statement->execute();
-                $reports = $statement->fetch();
-
-            }
         }
     }
 }
@@ -152,6 +161,8 @@ if (!$connection) {
 include  "search.php"; ?>
 
     <?php if (!empty($reports)) { ?>
+
+    <br><br>
 
     <table class="table">
         <thead>
@@ -225,9 +236,6 @@ include  "search.php"; ?>
         </div>
     </div>
 
-
-
-
     <script>
         var data = [{
             values: [ <?php echo $criminalReport['admission']?>, <?php echo $criminalReport['orders']?>, <?php echo $criminalReport['hearing']?>, <?php echo $criminalReport['count'] - ($criminalReport['admission']+$criminalReport['orders']+ $criminalReport['hearing']) ?>],
@@ -239,8 +247,6 @@ include  "search.php"; ?>
             labels: ['Admission', 'Orders', 'Hearing', 'Others'],
             type: 'pie'
         }];
-        console.log(data);
-        console.log(data2);
         var layout = {
             height: 380,
             width: 480
