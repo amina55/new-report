@@ -1,6 +1,7 @@
 <?php
 session_start();
 include "database_access.php";
+$selectColumns = '';
 if (!$connection) {
     $message = "Connection Failed.";
 } else {
@@ -27,27 +28,37 @@ if (!$connection) {
         $queryCondition .= ($caseId) ? " and filcase_type = $caseId " : '';
         $queryCondition .= ($purposeType) ? " and purpose_today = $purposeId " : '';
     }
-    $selectColumns = '';
     if(!empty($_SESSION['extra_params']) && $_SESSION['extra_params'] == 'advocate') {
         $selectColumns = ',pet_adv, res_adv';
 
     }
-    $query = "select case_no, cino, fil_no, fil_year $selectColumns  from civil_t where $queryCondition";
+    $query = "select case_no, cino, fil_no, fil_year $selectColumns from civil_t where $queryCondition";
     $statement = $connection->prepare($query);
     $statement->execute();
     $caseReports = $statement->fetchAll();
 }
 include "search.php"; ?>
 <br><br><br><br>
+
+<button class="btn btn-global btn-global-thin pull-right ml10" onclick="exportPdf()"> Export Pdf</button>
+<button class="btn btn-global btn-global-thin pull-right ml10" onclick="exportExcel()"> Export Excel</button>
+<!--<button class="btn btn-global btn-global-thin pull-right ml10" onclick="exportPowerPoint()"> Export Power Point</button>
+-->
+<br><br><br><br>
 <div class="list-shops">
     <div class="visible-block sorted-records-wrapper sorted-records">
-        <table class="table data-tables">
+        <table id="step3_table" class="table data-tables">
             <thead>
             <tr>
                 <th>Case No.</th>
                 <th>CINO</th>
                 <th>Fill Year</th>
                 <th>Fill No.</th>
+                <?php if($selectColumns) {
+                    echo "<th>Petitioner Advocate Name</th>";
+                    echo "<th>Respondent Advocate Name</th>";
+                }
+                ?>
                 <th>Actions</th>
             </tr>
             </thead>
@@ -58,6 +69,11 @@ include "search.php"; ?>
                     <td><?php echo $caseDetail['cino'] ?></td>
                     <td><?php echo $caseDetail['fil_year'] ?></td>
                     <td><?php echo $caseDetail['fil_no'] ?></td>
+
+                    <?php if($selectColumns) {
+                        echo "<td>".$caseDetail['pet_adv']."</td>";
+                        echo "<td>".$caseDetail['res_adv']."</td>";
+                    } ?>
 
                     <td>
                         <a href="view-detail.php?id=<?php echo $caseDetail['cino']; ?>" class="no-text-decoration" title="View Detail of Record">
@@ -70,6 +86,22 @@ include "search.php"; ?>
         </table>
     </div>
 </div>
+
+<script>
+
+    function exportPdf() {
+        $('#step3_table').tableExport({type:'pdf',escape:'false',pdfFontSize:'14',pdfLeftMargin:10});
+
+    }
+    function exportPowerPoint() {
+        $('#step3_table').tableExport({type:'powerpoint',escape:'false',pdfFontSize:'14',pdfLeftMargin:10,ignoreColumn:[4]});
+
+    }
+    function exportExcel() {
+        $('#step3_table').tableExport({type:'excel',escape:'false',pdfFontSize:'14',pdfLeftMargin:10});
+
+    }
+</script>
 
 <?php include "footer.php"?>
 

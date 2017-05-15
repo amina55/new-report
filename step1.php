@@ -1,15 +1,15 @@
 <?php
 session_start()       ;
 $message = $query = $purpose = '';
+$_SESSION['step3_query'] = '';
+$_SESSION['step2_query'] = '';
+$_SESSION['extra_params'] = '';
 include "database_access.php";
+$step = 'step1';
 if (!$connection) {
     $message = "Connection Failed.";
 } else {
     if ($_SERVER['REQUEST_METHOD'] == 'POST') {
-        $_SESSION['step3_query'] = '';
-        $_SESSION['step2_query'] = '';
-        $_SESSION['extra_params'] = '';
-
         $startYear = trim($_POST['start_year']);
         $endYear = trim($_POST['end_year']);
         $selector = trim($_POST['case_type_selector']);
@@ -18,7 +18,6 @@ if (!$connection) {
         $advocateName = strtoupper(trim($_POST['advocate_name']));
         $judgeName = strtoupper(trim($_POST['judge_name']));
         $purpose = ''; /*trim($_POST['purpose_selector']);*/
-        $step = 'step1';
 
         $whereQuery = $yearQuery = $caseQuery = "";
         if($startYear || $endYear) {
@@ -68,11 +67,11 @@ if (!$connection) {
             $judgeStr = '';
             $_SESSION['extra_params'] = 'judge';
             $judgeQuery = "select judge_code from judge_name_t where judge_name like '%$judgeName%'";
-            $judgeCodes = $judgeQuery->query();
+            $judgeCodes = $connection->query($judgeQuery);
             foreach ($judgeCodes as $judgeCode) {
-                $judgeStr .="'$judgeCode',";
+                $judgeStr .= $judgeCode['judge_code'].",";
             }
-            $judgeStr = ($judgeStr) ? rtrim($judgeStr) : '';
+            $judgeStr = ($judgeStr) ? rtrim($judgeStr, ',') : '';
             $whereQuery .= ($judgeStr) ? " judge_code like '%$judgeStr%' and" : '';
         }
         if($orderId) {
@@ -80,18 +79,17 @@ if (!$connection) {
             $whereQuery .= " fil_no = $orderId and";
         }
         $whereQuery = rtrim($whereQuery, 'and');
-
-        if ($step == 'step2') {
-            $_SESSION['step2_query'] = $whereQuery;
-            header('Location: step2.php'); exit();
-        }
         $query = ($whereQuery) ? $whereQuery : 'true';
 
     } else {
         $query = "true";
     }
+    $_SESSION['step1'] = $query;
+    if ($step == 'step2') {
+        $_SESSION['step2_query'] = $query;
+        header('Location: step2.php'); exit();
+    }
     if ($query) {
-        $_SESSION['step1'] = $query;
         $query = "select count(cino) as total_count from civil_t where " . $query;
         $statement = $connection->prepare($query);
         $statement->execute();
@@ -164,7 +162,13 @@ include  "search.php"; ?>
 
     <br><br>
 
-    <table class="table">
+    <button class="btn btn-global btn-global-thin pull-right ml10" onclick="exportPdf()"> Export Pdf</button>
+    <button class="btn btn-global btn-global-thin pull-right ml10" onclick="exportExcel()"> Export Excel</button>
+    <!--<button class="btn btn-global btn-global-thin pull-right ml10" onclick="exportPowerPoint()"> Export Power Point</button>-->
+
+    <br><br><br><br>
+
+    <table id="step1_table" class="table">
         <thead>
         <tr>
             <th>Type</th>
@@ -253,6 +257,19 @@ include  "search.php"; ?>
         };
         Plotly.newPlot('criminalDiv', data, layout);
         Plotly.newPlot('civilDiv', data2, layout);
+
+        function exportPdf() {
+            $('#step1_table').tableExport({type:'pdf',escape:'false',pdfFontSize:'14',pdfLeftMargin:10});
+
+        }
+        function exportPowerPoint() {
+            $('#step1_table').tableExport({type:'powerpoint',escape:'false',pdfFontSize:'14',pdfLeftMargin:10});
+
+        }
+        function exportExcel() {
+            $('#step1_table').tableExport({type:'excel',escape:'false',pdfFontSize:'14',pdfLeftMargin:10});
+
+        }
     </script>
     <br><br>
 <?php }

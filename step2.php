@@ -46,7 +46,12 @@ if (!empty($caseReports)) {
     $totalCount = $admTotal = $orderTotal = $hearingTotal = $othersTotal = 0;
     ?>
 
-    <table class="table">
+    <button class="btn btn-global btn-global-thin pull-right ml10" onclick="exportPdf()"> Export Pdf</button>
+    <button class="btn btn-global btn-global-thin pull-right ml10" onclick="exportExcel()"> Export Excel</button>
+    <!--<button class="btn btn-global btn-global-thin pull-right ml10" onclick="exportPowerPoint()"> Export Power Point</button>-->
+
+    <br><br><br><br>
+    <table id="step2_table" class="table">
         <thead>
         <tr>
             <th>Case Type</th>
@@ -124,6 +129,19 @@ if (!empty($caseReports)) {
             width: 1200
         };*/
         Plotly.newPlot('caseTypeGraph', data);
+
+        function exportPdf() {
+            $('#step2_table').tableExport({type:'pdf',escape:'false',pdfFontSize:'14',pdfLeftMargin:10});
+
+        }
+        function exportPowerPoint() {
+            $('#step2_table').tableExport({type:'powerpoint',escape:'false',pdfFontSize:'14',pdfLeftMargin:10});
+
+        }
+        function exportExcel() {
+            $('#step2_table').tableExport({type:'excel',escape:'false',pdfFontSize:'14',pdfLeftMargin:10});
+
+        }
     </script>
 
 <?php } else {

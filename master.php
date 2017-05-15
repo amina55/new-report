@@ -18,8 +18,13 @@
     <script src="js/bootstrap.min.js"></script>
     <script src="js/datatables.min.js"></script>
     <script src="js/report.js"></script>
+      <script type="text/javascript" src="js/tableExport.js"></script>
+      <script type="text/javascript" src="js/jquery.base64.js"></script>
       <script src="js/plotly-latest.min.js"></script>
       <script src="js/numeric.min.js"></script>
+      <script type="text/javascript" src="js/jspdf/libs/sprintf.js"></script>
+      <script type="text/javascript" src="js/jspdf/jspdf.js"></script>
+      <script type="text/javascript" src="js/jspdf/libs/base64.js"></script>
 
 
   </head>
