@@ -38,7 +38,7 @@
                       <img src="images/logo.png" />
                   </a>
                   <h3 style="margin-top: 60px; font-size: 40px; font-family: 'American Typewriter'">
-                      HIGH COURT JAMMU & KASHMIR
+                      HIGH COURT OF JAMMU & KASHMIR
                   </h3>
               </div>
           </div>

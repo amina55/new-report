@@ -4,6 +4,7 @@ $message = $query = $purpose = '';
 $_SESSION['step3_query'] = '';
 $_SESSION['step2_query'] = '';
 $_SESSION['extra_params'] = '';
+$tableHeading = 'Full Data';
 include "database_access.php";
 $step = 'step1';
 if (!$connection) {
@@ -17,7 +18,7 @@ if (!$connection) {
         $orderId = trim($_POST['order_id']);
         $advocateName = strtoupper(trim($_POST['advocate_name']));
         $judgeName = strtoupper(trim($_POST['judge_name']));
-        $purpose = ''; /*trim($_POST['purpose_selector']);*/
+        $tableHeading = $purpose = '';
 
         $whereQuery = $yearQuery = $caseQuery = "";
         if($startYear || $endYear) {
@@ -31,10 +32,12 @@ if (!$connection) {
                     }
                     $str = rtrim($str, ',');
                     $yearQuery = " fil_year in ($str) ";
+                    $tableHeading = 'Year ('.$startYear.'-'.$endYear.') ,';
                 }
             } else {
-                $yearQuery = "fil_year = ";
-                $yearQuery .= ($startYear) ? "'$startYear'" : "'$endYear'";
+                $year = ($startYear) ? $startYear : $endYear;
+                $yearQuery = "fil_year = '$year'";
+                $tableHeading = 'Year ('.$year.'),';
             }
             if($yearQuery) {
                 $whereQuery .= $yearQuery." and";
@@ -50,6 +53,7 @@ if (!$connection) {
             }
             $step = 'step2';
             $whereQuery .= $caseQuery." and";
+            $tableHeading .= "Case ($selector),";
         }
 
         if($caseType != 'all') {
@@ -61,6 +65,7 @@ if (!$connection) {
             $step = 'step2';
             $_SESSION['extra_params'] = 'advocate';
             $whereQuery .= " ( res_adv like '%$advocateName%' or pet_adv like '%$advocateName%' ) and";
+            $tableHeading .= " Advocate ($advocateName),";
         }
         if($judgeName) {
             $step = 'step2';
@@ -74,10 +79,12 @@ if (!$connection) {
             }
             $judgeQuery = ($judgeQuery) ? rtrim($judgeQuery, 'OR') : 'judge_code = ""';
             $whereQuery .= "( $judgeQuery ) and";
+            $tableHeading .= " Judge ($judgeName),";
         }
         if($orderId) {
             $step = 'step3';
             $whereQuery .= " fil_no = $orderId and";
+            $tableHeading .= " Case No. ($orderId),";
         }
         $whereQuery = rtrim($whereQuery, 'and');
         $query = ($whereQuery) ? $whereQuery : 'true';
@@ -86,6 +93,9 @@ if (!$connection) {
         $query = "true";
     }
     $_SESSION['step1'] = $query;
+    $_SESSION['table_name'] = rtrim($tableHeading, ',');
+    $tableHeading = $tableHeading.' Report';
+
     if ($step == 'step2') {
         $_SESSION['step2_query'] = $query;
         header('Location: step2.php'); exit();
@@ -241,6 +251,9 @@ include  "search.php"; ?>
         </div>
     </div>
 
+    <script src="js/jspdf.debug.js"></script>
+    <script src="js/jspdf.plugin.autotable.js"></script>
+    <script src="js/faker.min.js"></script>
     <script>
         var data = [{
             values: [ <?php echo $criminalReport['admission']?>, <?php echo $criminalReport['orders']?>, <?php echo $criminalReport['hearing']?>, <?php echo $criminalReport['count'] - ($criminalReport['admission']+$criminalReport['orders']+ $criminalReport['hearing']) ?>],
@@ -260,15 +273,22 @@ include  "search.php"; ?>
         Plotly.newPlot('civilDiv', data2, layout);
 
         function exportPdf() {
+            var doc = new jsPDF();
+            var title = '<?php echo $tableHeading?>'+' Report';
+            console.log(title);
+            doc.text(title, 14, 16);
+            var elem = document.getElementById("step1_table");
+            var res = doc.autoTableHtmlToJson(elem);
+            doc.autoTable(res.columns, res.data, {startY: 20});
+            doc.output('dataurlnewwindow');
+        }
+        
+        function exportPdf1() {
             $('#step1_table').tableExport({type:'pdf',escape:'false',pdfFontSize:'14',pdfLeftMargin:10});
 
         }
-        function exportPowerPoint() {
-            $('#step1_table').tableExport({type:'powerpoint',escape:'false',pdfFontSize:'14',pdfLeftMargin:10});
-
-        }
         function exportExcel() {
-            $('#step1_table').tableExport({type:'excel',escape:'false',pdfFontSize:'14',pdfLeftMargin:10});
+            $('#step1_table').tableExport({type:'excel',escape:'false',title:'<?php echo $tableHeading;?>'+' Report'});
 
         }
     </script>

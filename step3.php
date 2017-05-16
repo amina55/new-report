@@ -1,7 +1,8 @@
 <?php
 session_start();
 include "database_access.php";
-$selectColumns = '';
+$removeColumn = 4;
+$selectColumns = $tableHeading = '';
 $extraParams = (!empty($_SESSION['extra_params'])) ? $_SESSION['extra_params'] : '';
 if (!$connection) {
     $message = "Connection Failed.";
@@ -10,7 +11,14 @@ if (!$connection) {
         $queryCondition = $_SESSION['step3_query'];
     } else {
         $caseId = !empty($_GET['case_id']) ? $_GET['case_id'] : 0;
+        $caseType = !empty($_GET['case_type']) ? $_GET['case_type'] : '';
+
         $purposeType = !empty($_GET['purpose']) ? $_GET['purpose'] : '';
+        $tableHeading .= ($caseType) ? " $caseType," : '';
+        $tableHeading .= ($purposeType) ? " $purposeType," : '';
+        $tableHeading = ($tableHeading) ? rtrim($tableHeading, ',') : '';
+        $tableHeading = $_SESSION['table_name']. $tableHeading.' Report';
+
         switch ($purposeType) {
             case 'admission' :
                 $purposeId = 2;
@@ -31,9 +39,9 @@ if (!$connection) {
     }
     switch ($extraParams) {
         case 'advocate' :
-            $selectColumns = ',pet_adv, res_adv'; break;
+            $selectColumns = ',pet_adv, res_adv'; $removeColumn = 6; break;
         case 'judge' :
-            $selectColumns = ',judge_code'; break;
+            $selectColumns = ',judge_code'; $removeColumn = 5; break;
         default :
             $selectColumns = '';
     }
@@ -95,20 +103,37 @@ include "search.php"; ?>
     </div>
 </div>
 
+<script src="js/jspdf.debug.js"></script>
+<script src="js/jspdf.plugin.autotable.js"></script>
+<script src="js/faker.min.js"></script>
 <script>
 
-    function exportPdf() {
-        $('#step3_table').tableExport({type:'pdf',escape:'false',pdfFontSize:'14',pdfLeftMargin:10});
-
-    }
-    function exportPowerPoint() {
-        $('#step3_table').tableExport({type:'powerpoint',escape:'false',pdfFontSize:'14',pdfLeftMargin:10,ignoreColumn:[4]});
+    function exportExcel1() {
+        $('#step3_table').tableExport({type:'csv',escape:'false',ignoreColumn:[<?php echo $removeColumn; ?>],title:'<?php echo $tableHeading?>'});
 
     }
     function exportExcel() {
-        $('#step3_table').tableExport({type:'excel',escape:'false',pdfFontSize:'14',pdfLeftMargin:10});
-
+        $('#step3_table').tableExport({type:'excel',escape:'false',ignoreColumn:[<?php echo $removeColumn; ?>],title:'<?php echo $tableHeading?>'});
     }
+
+    function exportPdf() {
+        var doc = new jsPDF();
+        var title = '<?php echo $tableHeading; ?>';
+        doc.text(title, 14, 16);
+        var elem = document.getElementById("step3_table");
+        var res = doc.autoTableHtmlToJson(elem);
+        res.columns.splice(-1,1);
+        doc.autoTable(res.columns, res.data, {
+            startY: 20,
+            margin: {horizontal: 7},
+            bodyStyles: {valign: 'top'},
+            styles: {overflow: 'linebreak', columnWidth: 'wrap'},
+            columnStyles: {text: {columnWidth: 'auto'}}
+        });
+
+        doc.output('dataurlnewwindow');
+    }
+
 </script>
 
 <?php include "footer.php"?>

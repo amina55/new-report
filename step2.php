@@ -69,14 +69,15 @@ if (!empty($caseReports)) {
 
         <?php foreach ($caseReports as $caseReport) {
             $caseId = $caseReport['filcase_type'];
+            $caseType = $caseReport['type_name'];
             $caseCount = $caseReport['count'];
             $graphValues[] = $caseCount;
-            $graphLabels[] = $caseReport['type_name'];
+            $graphLabels[] = $caseType;
             $totalCount += $caseCount;
             ?>
 
         <tr>
-            <td><?php echo $caseReport['type_name']; ?></td>
+            <td><?php echo $caseType; ?></td>
             <?php if(!$purposeId) {
                 $admTotal += $caseReport['admission'];
                 $orderTotal += $caseReport['orders'];
@@ -84,13 +85,13 @@ if (!empty($caseReports)) {
                 $others = $caseCount - ($caseReport['orders'] + $caseReport['admission'] + $caseReport['hearing']);
                 $othersTotal += $others;
                 ?>
-                <td><?php echo ($caseReport['admission']  > 0) ? "<a href='step3.php?case_id=".$caseId. "&purpose=admission'>" . $caseReport['admission']  . "</a>" : $caseReport['admission']  ?></td>
-                <td><?php echo ($caseReport['hearing']  > 0) ? "<a href='step3.php?case_id=".$caseId. "&purpose=hearing'>" . $caseReport['hearing']  . "</a>" : $caseReport['hearing']  ?></td>
-                <td><?php echo ($caseReport['orders']  > 0) ? "<a href='step3.php?case_id=".$caseId. "&purpose=orders'>" . $caseReport['orders']  . "</a>" : $caseReport['orders']  ?></td>
+                <td><?php echo ($caseReport['admission']  > 0) ? "<a href='step3.php?case_id=".$caseId. "&case_type=$caseType&purpose=admission'>" . $caseReport['admission']  . "</a>" : $caseReport['admission']  ?></td>
+                <td><?php echo ($caseReport['hearing']  > 0) ? "<a href='step3.php?case_id=".$caseId. "&case_type=$caseType&purpose=hearing'>" . $caseReport['hearing']  . "</a>" : $caseReport['hearing']  ?></td>
+                <td><?php echo ($caseReport['orders']  > 0) ? "<a href='step3.php?case_id=".$caseId. "&case_type=$caseType&purpose=orders'>" . $caseReport['orders']  . "</a>" : $caseReport['orders']  ?></td>
                 <td><?php echo $others ?></td>
 
             <?php } ?>
-            <td><?php echo ($caseCount > 0) ? "<a href='step3.php?case_id=".$caseId."&purpose=$purposeType'>" . $caseCount . "</a>" : $caseCount ?></td>
+            <td><?php echo ($caseCount > 0) ? "<a href='step3.php?case_id=$caseId&case_type=$caseType'>" . $caseCount . "</a>" : $caseCount ?></td>
         </tr>
         <?php } ?>
 
@@ -116,30 +117,29 @@ if (!empty($caseReports)) {
             <div id="caseTypeGraph"></div>
     </div>
 
+    <script src="js/jspdf.debug.js"></script>
+    <script src="js/jspdf.plugin.autotable.js"></script>
+    <script src="js/faker.min.js"></script>
     <script>
         var data = [{
             y: <?php echo json_encode($graphValues);?>,
             x: <?php echo json_encode($graphLabels);?>,
             type: 'bar'
         }];
-
-        console.log(data);
-        /*var layout = {
-            height: 600,
-            width: 1200
-        };*/
         Plotly.newPlot('caseTypeGraph', data);
 
         function exportPdf() {
-            $('#step2_table').tableExport({type:'pdf',escape:'false',pdfFontSize:'14',pdfLeftMargin:10});
-
-        }
-        function exportPowerPoint() {
-            $('#step2_table').tableExport({type:'powerpoint',escape:'false',pdfFontSize:'14',pdfLeftMargin:10});
-
+            var doc = new jsPDF();
+            var title = '<?php echo $_SESSION['table_name']?>'+' Report';
+            console.log(title);
+            doc.text(title, 14, 16);
+            var elem = document.getElementById("step2_table");
+            var res = doc.autoTableHtmlToJson(elem);
+            doc.autoTable(res.columns, res.data, {startY: 20});
+            doc.output('dataurlnewwindow');
         }
         function exportExcel() {
-            $('#step2_table').tableExport({type:'excel',escape:'false',pdfFontSize:'14',pdfLeftMargin:10});
+            $('#step2_table').tableExport({type:'excel',escape:'false',title:'<?php echo $_SESSION['table_name']?>'+' Report'});
 
         }
     </script>

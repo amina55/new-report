@@ -32,7 +32,9 @@ THE SOFTWARE.*/
 						pdfLeftMargin:20,
 						escape:'true',
 						htmlContent:'false',
-						consoleLog:'false'
+						consoleLog:'false',
+					title: 'Report'
+
 				};
                 
 				var options = $.extend(defaults, options);
@@ -41,7 +43,7 @@ THE SOFTWARE.*/
 				if(defaults.type == 'csv' || defaults.type == 'txt'){
 				
 					// Header
-					var tdData ="";
+					var tdData = '"' + defaults.title + '"';
 					$(el).find('thead').find('tr').each(function() {
 					tdData += "\n";					
 						$(this).filter(':visible').find('th').each(function(index,data) {
@@ -213,7 +215,7 @@ THE SOFTWARE.*/
 
 				}else if(defaults.type == 'excel' || defaults.type == 'doc'|| defaults.type == 'powerpoint'  ){
 					//console.log($(this).html());
-					var excel="<table>";
+					var excel="<h3"+ defaults.title+"</h3><table>";
 					// Header
 					$(el).find('thead').find('tr').each(function() {
 						excel += "<tr>";
@@ -347,8 +349,6 @@ THE SOFTWARE.*/
 					if(defaults.escape == 'true'){
 						content_data = escape(content_data);
 					}
-					
-					
 					
 					return content_data;
 				}
