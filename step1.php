@@ -64,15 +64,16 @@ if (!$connection) {
         }
         if($judgeName) {
             $step = 'step2';
-            $judgeStr = '';
+            $judgeQuery = '';
             $_SESSION['extra_params'] = 'judge';
-            $judgeQuery = "select judge_code from judge_name_t where judge_name like '%$judgeName%'";
-            $judgeCodes = $connection->query($judgeQuery);
-            foreach ($judgeCodes as $judgeCode) {
-                $judgeStr .= $judgeCode['judge_code'].",";
+            $judgeCodeQuery = "select judge_code from judge_name_t where judge_name like '%$judgeName%'";
+            $judgeCodes = $connection->query($judgeCodeQuery);
+            foreach ($judgeCodes as $judgeCodeObject) {
+                $judgeCode = $judgeCodeObject['judge_code'];
+                $judgeQuery .= ($judgeCode == 1 ) ? " judge_code = '$judgeCode' OR" : " judge_code = '$judgeCode' OR" ;
             }
-            $judgeStr = ($judgeStr) ? rtrim($judgeStr, ',') : '';
-            $whereQuery .= ($judgeStr) ? " judge_code like '%$judgeStr%' and" : '';
+            $judgeQuery = ($judgeQuery) ? rtrim($judgeQuery, 'OR') : 'judge_code = ""';
+            $whereQuery .= "( $judgeQuery ) and";
         }
         if($orderId) {
             $step = 'step3';

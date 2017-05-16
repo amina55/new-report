@@ -2,6 +2,7 @@
 session_start();
 include "database_access.php";
 $selectColumns = '';
+$extraParams = (!empty($_SESSION['extra_params'])) ? $_SESSION['extra_params'] : '';
 if (!$connection) {
     $message = "Connection Failed.";
 } else {
@@ -28,9 +29,13 @@ if (!$connection) {
         $queryCondition .= ($caseId) ? " and filcase_type = $caseId " : '';
         $queryCondition .= ($purposeType) ? " and purpose_today = $purposeId " : '';
     }
-    if(!empty($_SESSION['extra_params']) && $_SESSION['extra_params'] == 'advocate') {
-        $selectColumns = ',pet_adv, res_adv';
-
+    switch ($extraParams) {
+        case 'advocate' :
+            $selectColumns = ',pet_adv, res_adv'; break;
+        case 'judge' :
+            $selectColumns = ',judge_code'; break;
+        default :
+            $selectColumns = '';
     }
     $query = "select case_no, cino, fil_no, fil_year $selectColumns from civil_t where $queryCondition";
     $statement = $connection->prepare($query);
@@ -54,9 +59,11 @@ include "search.php"; ?>
                 <th>CINO</th>
                 <th>Fill Year</th>
                 <th>Fill No.</th>
-                <?php if($selectColumns) {
+                <?php if($extraParams == 'advocate') {
                     echo "<th>Petitioner Advocate Name</th>";
                     echo "<th>Respondent Advocate Name</th>";
+                } elseif ($extraParams == 'judge') {
+                    echo "<th>Judge Code</th>";
                 }
                 ?>
                 <th>Actions</th>
@@ -70,11 +77,12 @@ include "search.php"; ?>
                     <td><?php echo $caseDetail['fil_year'] ?></td>
                     <td><?php echo $caseDetail['fil_no'] ?></td>
 
-                    <?php if($selectColumns) {
+                    <?php if($extraParams == 'advocate') {
                         echo "<td>".$caseDetail['pet_adv']."</td>";
                         echo "<td>".$caseDetail['res_adv']."</td>";
-                    } ?>
-
+                    } elseif ($extraParams == 'judge') {
+                        echo "<td>".$caseDetail['judge_code']."</td>";
+                    }?>
                     <td>
                         <a href="view-detail.php?id=<?php echo $caseDetail['cino']; ?>" class="no-text-decoration" title="View Detail of Record">
                             View Detail
