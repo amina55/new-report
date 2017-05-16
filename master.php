@@ -37,6 +37,9 @@
                   <a href="step1.php" class="mt10 logo pull-left no-text-decoration">
                       <img src="images/logo.png" />
                   </a>
+                  <h3 style="margin-top: 60px; font-size: 40px; font-family: 'American Typewriter'">
+                      HIGH COURT JAMMU & KASHMIR
+                  </h3>
               </div>
           </div>
       </div>
