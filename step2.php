@@ -29,6 +29,7 @@ if (!$connection) {
         $queryCondition = $_SESSION['step1']. " and branch_id = $queryModify";
         $queryCondition .= ($purposeId) ? ' and purpose_today = '.$purposeId : '';
     }
+    $_SESSION['step2_query'] = $queryCondition;
 
     $query = "select civil_t.filcase_type, case_type_t.type_name, count(civil_t.cino) as count";
     $query .= (!$purposeId) ? ", sum(case when purpose_today = 2 then 1 else 0 end) admission, sum(case when purpose_today = 4 then 1 else 0 end) orders, sum(case when purpose_today = 8 then 1 else 0 end) hearing ": '';

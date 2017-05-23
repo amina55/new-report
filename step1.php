@@ -3,7 +3,8 @@ session_start()       ;
 $message = $query = $purpose = '';
 $_SESSION['step3_query'] = '';
 $_SESSION['step2_query'] = '';
-$_SESSION['extra_params'] = '';
+$_SESSION['advocate_name'] = '';
+$_SESSION['judge_name'] = '';
 $tableHeading = 'Full Data';
 include "database_access.php";
 $step = 'step1';
@@ -62,27 +63,18 @@ if (!$connection) {
         }
 
         if($advocateName) {
-            $step = 'step2';
-            $_SESSION['extra_params'] = 'advocate';
-            $whereQuery .= " ( res_adv like '%$advocateName%' or pet_adv like '%$advocateName%' ) and";
+            $step = 'selection';
+            $_SESSION['advocate_name'] = $advocateName;
             $tableHeading .= " Advocate ($advocateName),";
         }
         if($judgeName) {
-            $step = 'step2';
+            $step = 'selection';
             $judgeQuery = '';
-            $_SESSION['extra_params'] = 'judge';
-            $judgeCodeQuery = "select judge_code from judge_name_t where judge_name like '%$judgeName%'";
-            $judgeCodes = $connection->query($judgeCodeQuery);
-            foreach ($judgeCodes as $judgeCodeObject) {
-                $judgeCode = $judgeCodeObject['judge_code'];
-                $judgeQuery .= ($judgeCode == 1 ) ? " judge_code = '$judgeCode' OR" : " judge_code = '$judgeCode' OR" ;
-            }
-            $judgeQuery = ($judgeQuery) ? rtrim($judgeQuery, 'OR') : 'judge_code = ""';
-            $whereQuery .= "( $judgeQuery ) and";
+            $_SESSION['judge_name'] = $judgeName;
             $tableHeading .= " Judge ($judgeName),";
         }
         if($orderId) {
-            $step = 'step3';
+            $step = 'step2';
             $whereQuery .= " fil_no = $orderId and";
             $tableHeading .= " Case No. ($orderId),";
         }
@@ -96,9 +88,9 @@ if (!$connection) {
     $_SESSION['table_name'] = rtrim($tableHeading, ',');
     $tableHeading = $tableHeading.' Report';
 
-    if ($step == 'step2') {
+    if ($step != 'step1') {
         $_SESSION['step2_query'] = $query;
-        header('Location: step2.php'); exit();
+        header('Location: '.$step.'.php'); exit();
     }
     if ($query) {
         $query = "select count(cino) as total_count from civil_t where " . $query;

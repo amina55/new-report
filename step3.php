@@ -3,7 +3,9 @@ session_start();
 include "database_access.php";
 $removeColumn = 4;
 $selectColumns = $tableHeading = '';
-$extraParams = (!empty($_SESSION['extra_params'])) ? $_SESSION['extra_params'] : '';
+$advocateName = (!empty($_SESSION['advocate_name'])) ? $_SESSION['advocate_name'] : '';
+$judgeName = (!empty($_SESSION['judge_name'])) ? $_SESSION['judge_name'] : '';
+
 if (!$connection) {
     $message = "Connection Failed.";
 } else {
@@ -32,23 +34,24 @@ if (!$connection) {
             default :
                 $purposeId = 0;
         }
-        $queryCondition = $_SESSION['step1'];
-        ;
+        $queryCondition = $_SESSION['step2_query'];
         $queryCondition .= ($caseId) ? " and filcase_type = $caseId " : '';
         $queryCondition .= ($purposeType) ? " and purpose_today = $purposeId " : '';
     }
-    switch ($extraParams) {
-        case 'advocate' :
-            $selectColumns = ',pet_adv, res_adv'; $removeColumn = 6; break;
-        case 'judge' :
-            $selectColumns = ',judge_code'; $removeColumn = 5; break;
-        default :
-            $selectColumns = '';
+    if($advocateName) {
+        $selectColumns .= ',pet_adv, res_adv';
+        $removeColumn += 2;
+    }
+    if($judgeName) {
+        $selectColumns .= ',judge_code';
+        $removeColumn += 1;
+
     }
     $query = "select case_no, cino, fil_no, fil_year $selectColumns from civil_t where $queryCondition";
     $statement = $connection->prepare($query);
     $statement->execute();
     $caseReports = $statement->fetchAll();
+
 }
 include "search.php"; ?>
 <br><br><br><br>
@@ -67,10 +70,10 @@ include "search.php"; ?>
                 <th>CINO</th>
                 <th>Fill Year</th>
                 <th>Fill No.</th>
-                <?php if($extraParams == 'advocate') {
+                <?php if($advocateName) {
                     echo "<th>Petitioner Advocate Name</th>";
                     echo "<th>Respondent Advocate Name</th>";
-                } elseif ($extraParams == 'judge') {
+                } if ($judgeName) {
                     echo "<th>Judge Code</th>";
                 }
                 ?>
@@ -85,10 +88,10 @@ include "search.php"; ?>
                     <td><?php echo $caseDetail['fil_year'] ?></td>
                     <td><?php echo $caseDetail['fil_no'] ?></td>
 
-                    <?php if($extraParams == 'advocate') {
+                    <?php if($advocateName) {
                         echo "<td>".$caseDetail['pet_adv']."</td>";
                         echo "<td>".$caseDetail['res_adv']."</td>";
-                    } elseif ($extraParams == 'judge') {
+                    } if ($judgeName) {
                         echo "<td>".$caseDetail['judge_code']."</td>";
                     }?>
                     <td>
@@ -117,7 +120,7 @@ include "search.php"; ?>
     }
 
     function exportPdf() {
-        var doc = new jsPDF();
+        var doc = new jsPDF('l');
         var title = '<?php echo $tableHeading; ?>';
         doc.text(title, 14, 16);
         var elem = document.getElementById("step3_table");
