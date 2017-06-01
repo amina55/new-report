@@ -16,7 +16,6 @@ if (empty($criminalCaseIdsStr)) {
     $_SESSION['criminal_case_ids'] = $criminalCaseIdsStr;
 }
 
-
 $civilCaseIdStr = !empty($_SESSION['civil_case_ids']) ? $_SESSION['civil_case_ids'] : '';
 if (empty($civilCaseIdStr)) {
     $civilCaseIdsQuery = "select DISTINCT filcase_type from civil_t where branch_id = 1";
@@ -27,7 +26,6 @@ if (empty($civilCaseIdStr)) {
     $civilCaseIdStr = rtrim($civilCaseIdStr, ',');
     $_SESSION['civil_case_ids'] = $civilCaseIdStr;
 }
-
 
 $criminalQuery = "select case_type, type_name from case_type_t where case_type in ($criminalCaseIdsStr)";
 $statement = $connection->prepare($criminalQuery);
