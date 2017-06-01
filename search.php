@@ -7,7 +7,7 @@ include "database_access.php";
 
 $criminalCaseIdsStr = !empty($_SESSION['criminal_case_ids']) ? $_SESSION['criminal_case_ids'] : '';
 if (empty($criminalCaseIdsStr)) {
-    $criminalCaseIdsQuery = "select DISTINCT filcase_type from civil_t where branch_id = 2";
+    $criminalCaseIdsQuery = "select DISTINCT filcase_type from civil_t where ci_cri = 3 ";
     $criminalCaseIds = $connection->query($criminalCaseIdsQuery);
     foreach ($criminalCaseIds as $criminalCaseId) {
         $criminalCaseIdsStr .= $criminalCaseId['filcase_type'].",";
@@ -18,7 +18,7 @@ if (empty($criminalCaseIdsStr)) {
 
 $civilCaseIdStr = !empty($_SESSION['civil_case_ids']) ? $_SESSION['civil_case_ids'] : '';
 if (empty($civilCaseIdStr)) {
-    $civilCaseIdsQuery = "select DISTINCT filcase_type from civil_t where branch_id = 1";
+    $civilCaseIdsQuery = "select DISTINCT filcase_type from civil_t where ci_cri = 2 ";
     $civilCaseIds = $connection->query($civilCaseIdsQuery);
     foreach ($civilCaseIds as $civilCaseId) {
         $civilCaseIdStr .= $civilCaseId['filcase_type'].",";

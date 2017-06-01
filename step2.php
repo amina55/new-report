@@ -25,8 +25,8 @@ if (!$connection) {
     if(!empty($_SESSION['step2_query'])) {
         $queryCondition = $_SESSION['step2_query'];
     } else {
-        $queryModify = (!empty($_GET['type']) && $_GET['type'] == 'civil') ? '1' : '2';
-        $queryCondition = $_SESSION['step1']. " and branch_id = $queryModify";
+        $queryModify = (!empty($_GET['type']) && $_GET['type'] == 'civil') ? '2' : '3';
+        $queryCondition = $_SESSION['step1']. " and ci_cri = $queryModify";
         $queryCondition .= ($purposeId) ? ' and purpose_today = '.$purposeId : '';
     }
     $_SESSION['step2_query'] = $queryCondition;

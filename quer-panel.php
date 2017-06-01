@@ -1,6 +1,6 @@
 <?php
 
-$query = "select count(*) from civil_t where branch_id = 1";
+$query = "select ci_cri, count(*) from civil_t group by ci_cri";
 
 include "database_access.php";
 

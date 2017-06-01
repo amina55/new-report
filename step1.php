@@ -48,9 +48,9 @@ if (!$connection) {
         if($selector != 'all') {
             $caseQuery = "";
             if($selector == 'criminal') {
-                $caseQuery = " branch_id = 2 ";
+                $caseQuery = " ci_cri = 3 ";
             } else {
-                $caseQuery = " branch_id = 1 ";
+                $caseQuery = " ci_cri = 2 ";
             }
             $step = 'step2';
             $whereQuery .= $caseQuery." and";
@@ -99,9 +99,9 @@ if (!$connection) {
         $reports = $statement->fetch(PDO::FETCH_ASSOC);
 
         if($reports['total_count'] > 0 ) {
-            $criminalCaseIdsStr = !empty($_SESSION['criminal_case_ids']) ? $_SESSION['criminal_case_ids'] : '';
+            /*$criminalCaseIdsStr = !empty($_SESSION['criminal_case_ids']) ? $_SESSION['criminal_case_ids'] : '';
             if (empty($criminalCaseIdsStr)) {
-                $criminalCaseIdsQuery = "select DISTINCT filcase_type from civil_t where branch_id = 2";
+                $criminalCaseIdsQuery = "select DISTINCT filcase_type from civil_t where ci_cri = 3";
                 $criminalCaseIds = $connection->query($criminalCaseIdsQuery);
                 foreach ($criminalCaseIds as $criminalCaseId) {
                     $criminalCaseIdsStr .= $criminalCaseId['filcase_type'].",";
@@ -112,14 +112,14 @@ if (!$connection) {
 
             $civilCaseIdStr = !empty($_SESSION['civil_case_ids']) ? $_SESSION['civil_case_ids'] : '';
             if (empty($civilCaseIdStr)) {
-                $civilCaseIdsQuery = "select DISTINCT filcase_type from civil_t where branch_id = 1";
+                $civilCaseIdsQuery = "select DISTINCT filcase_type from civil_t where ci_cri = 2";
                 $civilCaseIds = $connection->query($civilCaseIdsQuery);
                 foreach ($civilCaseIds as $civilCaseId) {
                     $civilCaseIdStr .= $civilCaseId['filcase_type'].",";
                 }
                 $civilCaseIdStr = rtrim($civilCaseIdStr, ',');
                 $_SESSION['civil_case_ids'] = $civilCaseIdStr;
-            }
+            }*/
 
             switch ($purpose) {
                 case 'all' :
@@ -138,13 +138,13 @@ if (!$connection) {
                     $countQuery = ', sum(case when purpose_today = 2 then 1 else 0 end) admission, sum(case when purpose_today = 4 then 1 else 0 end) orders, sum(case when purpose_today = 8 then 1 else 0 end) hearing';
             }
 
-            $query = $_SESSION['step1'] . " and filcase_type in ($criminalCaseIdsStr) ";
+            $query = $_SESSION['step1'] . " and ci_cri = 3 ";
             $query = "select count(cino) as count $countQuery from civil_t where " . $query;
             $statement = $connection->prepare($query);
             $statement->execute();
             $criminalReport = $statement->fetch(PDO::FETCH_ASSOC);
 
-            $query = $_SESSION['step1'] . " and filcase_type in ($civilCaseIdStr) ";
+            $query = $_SESSION['step1'] . " and ci_cri = 2 ";
             $query = "select count(cino) as count $countQuery from civil_t where " . $query;
             $statement = $connection->prepare($query);
             $statement->execute();
