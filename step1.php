@@ -96,7 +96,7 @@ if (!$connection) {
         $query = "select count(cino) as total_count from civil_t where " . $query;
         $statement = $connection->prepare($query);
         $statement->execute();
-        $reports = $statement->fetch();
+        $reports = $statement->fetch(PDO::FETCH_ASSOC);
 
         if($reports['total_count'] > 0 ) {
             $criminalCaseIdsStr = !empty($_SESSION['criminal_case_ids']) ? $_SESSION['criminal_case_ids'] : '';
@@ -142,18 +142,18 @@ if (!$connection) {
             $query = "select count(cino) as count $countQuery from civil_t where " . $query;
             $statement = $connection->prepare($query);
             $statement->execute();
-            $criminalReport = $statement->fetch();
+            $criminalReport = $statement->fetch(PDO::FETCH_ASSOC);
 
             $query = $_SESSION['step1'] . " and filcase_type in ($civilCaseIdStr) ";
             $query = "select count(cino) as count $countQuery from civil_t where " . $query;
             $statement = $connection->prepare($query);
             $statement->execute();
-            $civilReport = $statement->fetch();
+            $civilReport = $statement->fetch(PDO::FETCH_ASSOC);
 
             $query = "select count(cino) as count $countQuery from civil_t where " . $_SESSION['step1'];
             $statement = $connection->prepare($query);
             $statement->execute();
-            $reports = $statement->fetch();
+            $reports = $statement->fetch(PDO::FETCH_ASSOC);
 
         }
     }
@@ -239,7 +239,7 @@ include  "search.php"; ?>
         </div>
         <div class="col-sm-6">
             <h3>Civil Graph</h3>
-            <div id="civilDiv" style="width: 480px; height: 380px;"></div>
+            <div id="civilDiv" style="width: 480px; height: 380px;">‘</div>
         </div>
     </div>
 

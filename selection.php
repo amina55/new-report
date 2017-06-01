@@ -8,9 +8,9 @@ $resAdvocateRecords = $petAdvocateRecords = $judgeRecords = null;
 $message = '';
 
 if($_SERVER['REQUEST_METHOD'] == 'POST') {
-    $selectedResAdv = !empty($_POST['res_advocate_name']) ? $_POST['res_advocate_name'] : [];
-    $selectedPetAdv = !empty($_POST['pet_advocate_name']) ? $_POST['pet_advocate_name'] : [];
-    $selectedJudgeCodes = !empty($_POST['judge_codes']) ? $_POST['judge_codes'] : [];
+    $selectedResAdv = !empty($_POST['res_advocate_name']) ? $_POST['res_advocate_name'] : array();
+    $selectedPetAdv = !empty($_POST['pet_advocate_name']) ? $_POST['pet_advocate_name'] : array();
+    $selectedJudgeCodes = !empty($_POST['judge_codes']) ? $_POST['judge_codes'] : array();
 
     if($advocateName && empty($selectedPetAdv) && empty($selectedResAdv)) {
         $message = "Choose atleast 1 advocate for searching";
@@ -46,20 +46,18 @@ if($advocateName) {
     $query = "select DISTINCT res_adv from civil_t where $whereQuery and res_adv LIKE '%$advocateName%'";
     $statement = $connection->prepare($query);
     $statement->execute();
-    $resAdvocateRecords = $statement->fetchAll();
-    echo $query;
-
+    $resAdvocateRecords = $statement->fetchAll(PDO::FETCH_ASSOC);
 
     $query = "select DISTINCT pet_adv from civil_t where $whereQuery and pet_adv LIKE '%$advocateName%'";
     $statement = $connection->prepare($query);
     $statement->execute();
-    $petAdvocateRecords = $statement->fetchAll();
+    $petAdvocateRecords = $statement->fetchAll(PDO::FETCH_ASSOC);
 }
 if($judgeName) {
     $query = "select judge_code, judge_name, count(*) from judge_name_t where judge_name like '%$judgeName%' group by judge_name, judge_code";
     $statement = $connection->prepare($query);
     $statement->execute();
-    $judgeRecords = $statement->fetchAll();
+    $judgeRecords = $statement->fetchAll(PDO::FETCH_ASSOC);
 }
 if(empty($resAdvocateRecords) && empty($petAdvocateRecords) && empty($judgeRecords)) { ?>
     <div class="col-sm-12">

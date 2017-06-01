@@ -50,7 +50,7 @@ if (!$connection) {
     $query = "select case_no, cino, fil_no, fil_year $selectColumns from civil_t where $queryCondition";
     $statement = $connection->prepare($query);
     $statement->execute();
-    $caseReports = $statement->fetchAll();
+    $caseReports = $statement->fetchAll(PDO::FETCH_ASSOC);
 
 }
 include "search.php"; ?>

@@ -36,14 +36,14 @@ if (!$connection) {
     $query .= " from civil_t INNER JOIN case_type_t ON civil_t.filcase_type = case_type_t.case_type  and " . $queryCondition . " group by civil_t.filcase_type, case_type_t.type_name";
     $statement = $connection->prepare($query);
     $statement->execute();
-    $caseReports = $statement->fetchAll();
+    $caseReports = $statement->fetchAll(PDO::FETCH_ASSOC);
 }
 
 include "search.php";
 
 if (!empty($caseReports)) {
-    $graphValues = [];
-    $graphLabels = [];
+    $graphValues = array();
+    $graphLabels = array();
     $totalCount = $admTotal = $orderTotal = $hearingTotal = $othersTotal = 0;
     ?>
 

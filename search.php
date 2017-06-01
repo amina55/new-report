@@ -32,12 +32,12 @@ if (empty($civilCaseIdStr)) {
 $criminalQuery = "select case_type, type_name from case_type_t where case_type in ($criminalCaseIdsStr)";
 $statement = $connection->prepare($criminalQuery);
 $statement->execute();
-$criminalCases = $statement->fetchAll();
+$criminalCases = $statement->fetchAll(PDO::FETCH_ASSOC);
 
 $civilQuery = "select case_type, type_name from case_type_t where case_type in ($civilCaseIdStr)";
 $statement = $connection->prepare($civilQuery);
 $statement->execute();
-$civilCases = $statement->fetchAll();
+$civilCases = $statement->fetchAll(PDO::FETCH_ASSOC);
 ?>
 
     <!------------------------------ Page Header -------------------------------->
